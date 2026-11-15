@@ -1,0 +1,578 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Celeste · Dushanbe Hub</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira:wdth,wght@50..125,100..900&family=Hanken+Grotesk:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: one 1920×1080 stage, scaled to the window. Planets, ship, comet and the patch are
+   persistent "actors" that glide between slide positions (morph); text rises in after them. */
+:root{
+  --void:#04060D; --deep:#0A0F22; --panel:rgba(16,22,46,.62); --line:rgba(157,180,224,.18);
+  --cream:#FFF3E8; --mute:#A9B6D3; --copper:#E08A55; --copper-2:#B9582E; --peri:#9DB4E0;
+  --ok:#5BC08A; --warn:#F2B04A; --bad:#EF6A55;
+  --display:"Saira","Eurostile","Arial Narrow",ui-sans-serif,system-ui,sans-serif;
+  --body:"Hanken Grotesk",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"Saira",ui-sans-serif,system-ui,sans-serif;
+  --ease:cubic-bezier(.68,0,.18,1); --out:cubic-bezier(.16,.84,.24,1);
+  color-scheme:dark;
+}
+html,body{height:100%;background:var(--void);color:var(--cream)}
+body{margin:0;overflow:hidden;font-family:var(--body);-webkit-font-smoothing:antialiased;
+  padding-left:max(0px,env(safe-area-inset-left,0px));padding-right:max(0px,env(safe-area-inset-right,0px))}
+#view{position:fixed;inset:0;overflow:hidden;background:radial-gradient(120% 90% at 70% 20%,#0C1430 0%,#05070F 55%,#020309 100%)}
+#stage{position:absolute;left:50%;top:50%;width:1920px;height:1080px;transform-origin:0 0;overflow:hidden;
+  background:radial-gradient(90% 80% at 72% 30%,#101a3d 0%,#070b1a 50%,#03050c 100%)}
+#neb{position:absolute;left:-300px;top:-260px;width:3500px;height:1640px;background:url(assets/deep-space.jpg) center/cover;opacity:.9;
+  transition:transform 2.6s var(--ease);mix-blend-mode:screen}
+#stars{position:absolute;inset:0;width:1920px;height:1080px}
+#veil{position:absolute;inset:0;pointer-events:none;background:
+  radial-gradient(60% 70% at 0% 50%,rgba(3,5,12,.82),transparent 70%),
+  linear-gradient(180deg,rgba(3,5,12,.2),transparent 30%,transparent 70%,rgba(3,5,12,.55))}
+
+/* actors */
+.actor{position:absolute;left:0;top:0;transform-origin:50% 50%;pointer-events:none;will-change:transform,opacity;
+  transition:transform 1.8s var(--ease),opacity 1.1s ease,filter 1.8s var(--ease)}
+.actor .fl{width:100%;height:100%;animation:bob var(--bd,9s) ease-in-out infinite alternate}
+.actor img{display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none}
+@keyframes bob{from{transform:translate(0,-7px) rotate(-1.2deg)}to{transform:translate(0,7px) rotate(1.2deg)}}
+#a-earth img{filter:drop-shadow(0 0 40px rgba(90,150,255,.35))}
+#a-mars img{filter:drop-shadow(0 0 46px rgba(230,120,60,.32))}
+#a-jupiter img{filter:drop-shadow(0 0 40px rgba(240,190,140,.22))}
+#a-patch img{border-radius:50%;filter:drop-shadow(0 0 50px rgba(230,140,80,.38))}
+#a-body img{filter:drop-shadow(0 0 40px rgba(157,180,224,.35)) brightness(1.04)}
+#a-ship .fl{--bd:6s}
+.spin{animation:spin 120s linear infinite}
+@keyframes spin{to{rotate:360deg}}
+#a-comet .fl{--bd:4s}
+#a-comet .rock{position:absolute;left:-30px;top:225px;width:120px;filter:drop-shadow(0 0 30px rgba(255,170,90,.7))}
+#a-comet .tail{position:absolute;left:0;top:0;width:700px;opacity:.95;mix-blend-mode:screen;animation:flick 1.6s ease-in-out infinite alternate}
+@keyframes flick{from{opacity:.75;transform:scaleX(.97)}to{opacity:1;transform:scaleX(1.03)}}
+
+/* svg overlays drawn on the stage */
+svg.ov{position:absolute;inset:0;width:1920px;height:1080px;pointer-events:none;opacity:0;transition:opacity 1s ease}
+svg.ov.on{opacity:1;transition-delay:.9s}
+.dash{stroke-dasharray:6 12;animation:dash 1.4s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-36}}
+
+/* slides */
+.slide{position:absolute;inset:0;padding:120px 128px 150px;box-sizing:border-box;visibility:hidden;pointer-events:none}
+.slide.on{visibility:visible;pointer-events:auto}
+.slide .r{opacity:0;transform:translateY(34px);filter:blur(10px);
+  transition:opacity .9s var(--out),transform 1.1s var(--out),filter .9s var(--out);transition-delay:calc(.55s + var(--i,0) * .09s)}
+.slide.on .r{opacity:1;transform:none;filter:none}
+.slide.out{visibility:visible}
+.slide.out .r{opacity:0;transform:translateY(-26px);filter:blur(8px);transition:opacity .4s ease,transform .5s ease,filter .4s ease;transition-delay:calc(var(--i,0) * .02s)}
+.eyebrow{font:500 22px/1 var(--mono);letter-spacing:.28em;text-transform:uppercase;color:var(--peri)}
+.eyebrow b{color:var(--copper);font-weight:600}
+h1,h2,h3,p{margin:0}
+h2{font-weight:700;font-size:76px;line-height:1.02;letter-spacing:-.035em;text-wrap:balance;color:var(--cream)}
+h2 em{font-style:normal;color:var(--copper)}
+.lead{font-size:30px;line-height:1.42;color:var(--mute);max-width:980px;text-wrap:pretty}
+.foot{position:absolute;left:128px;right:900px;bottom:52px;display:flex;gap:28px;justify-content:flex-start;align-items:center;font:500 20px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:rgba(169,182,211,.7)}
+.foot i{font-style:normal;color:var(--copper)}
+
+/* 1 — title */
+#s1 .col{position:absolute;left:128px;top:300px;width:1080px;display:flex;flex-direction:column;gap:30px}
+#s1 h1{font-weight:800;font-size:248px;line-height:.86;letter-spacing:-.06em;display:flex;margin-left:-10px}
+#s1 h1 span{display:inline-block;opacity:0;transform:translateY(80px) rotateX(70deg);filter:blur(14px);
+  background:linear-gradient(180deg,#FFF6EC 30%,#F0B68C 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
+  transition:opacity .9s var(--out),transform 1.2s var(--out),filter 1s var(--out);transition-delay:calc(.5s + var(--k) * .07s)}
+#s1.on h1 span{opacity:1;transform:none;filter:none}
+#s1.out h1 span{opacity:0;transform:translateY(-40px);filter:blur(10px);transition-duration:.45s;transition-delay:0s}
+#s1 .lead{font-size:33px;max-width:900px;color:#C6D0E6}
+.chal{display:inline-flex;align-items:center;gap:16px;padding:16px 26px 16px 18px;border:1px solid var(--line);border-radius:999px;background:rgba(14,20,44,.6);
+  font-size:24px;color:var(--cream);width:max-content;max-width:1100px}
+.chal b{font:600 17px/1 var(--mono);letter-spacing:.18em;color:var(--void);background:var(--copper);padding:9px 12px;border-radius:999px}
+.team{display:flex;gap:56px;align-items:flex-end;margin-top:14px}
+.team .k{font:500 18px/1 var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--peri);margin-bottom:12px}
+.team .v{font-size:40px;font-weight:700;letter-spacing:-.02em}
+.team .m{font-size:28px;color:#D6DEEF;font-weight:500}
+.url{font:500 24px/1 var(--mono);color:var(--copper);letter-spacing:.06em}
+
+/* 2 — problem */
+#s2 .top{width:1060px;display:flex;flex-direction:column;gap:28px;margin-top:20px}
+#s2 h2{font-size:80px}
+.haz{position:absolute;left:128px;right:128px;bottom:150px;display:grid;grid-template-columns:repeat(5,1fr);gap:20px}
+.hz{padding:26px 26px 28px;border-radius:26px;background:var(--panel);border:1px solid var(--line);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  display:flex;flex-direction:column;gap:14px}
+.hz .l{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;font:700 28px/1 var(--display);color:var(--cream);
+  background:radial-gradient(circle at 35% 30%,#F3A877,#9B4320);box-shadow:0 0 30px rgba(224,138,85,.45)}
+.hz h3{font-size:28px;font-weight:650;letter-spacing:-.01em}
+.hz p{font-size:22px;line-height:1.35;color:var(--mute)}
+.delay{position:absolute;left:1240px;top:84px;font:500 20px/1.3 var(--mono);letter-spacing:.12em;color:var(--peri);text-transform:uppercase;width:420px}
+.delay b{display:block;font:700 46px/1.05 var(--display);letter-spacing:-.02em;color:var(--cream);text-transform:none;margin-top:8px}
+
+/* 3 — solution */
+#s3 .right{position:absolute;left:880px;top:120px;width:912px;display:flex;flex-direction:column;gap:30px}
+#s3 h2{font-size:66px}
+.loop{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:8px}
+.st{position:relative;padding:28px 30px 30px 30px;border-radius:26px;background:var(--panel);border:1px solid var(--line);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.st .n{font:600 20px/1 var(--mono);letter-spacing:.18em;color:var(--copper)}
+.st h3{font-size:36px;font-weight:700;letter-spacing:-.02em;margin:14px 0 10px}
+.st p{font-size:23px;line-height:1.4;color:var(--mute)}
+.pin{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;opacity:0;transition:opacity .6s ease 1.4s}
+#s3.on .pin{opacity:1}
+.pin::before,.pin::after{content:"";position:absolute;inset:0;border-radius:50%;background:var(--c)}
+.pin::after{animation:ping 2.2s var(--out) infinite;opacity:.7}
+@keyframes ping{to{transform:scale(3.4);opacity:0}}
+.tag{position:absolute;font:600 19px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--cream);padding:10px 14px;border-radius:999px;
+  background:rgba(10,14,32,.8);border:1px solid var(--line);white-space:nowrap;opacity:0;transition:opacity .6s ease 1.6s}
+#s3.on .tag{opacity:1}
+.tag i{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--c);margin-right:10px;vertical-align:1px}
+
+/* 4 — tour */
+#s4 .tophead{position:absolute;left:200px;right:200px;top:62px;display:flex;justify-content:space-between;align-items:flex-end;gap:40px}
+#s4 .tophead .eyebrow{margin-bottom:10px}
+#s4 .tools{display:flex;flex-direction:column;align-items:flex-end;gap:12px}
+.snd{display:inline-flex;align-items:center;gap:12px;padding:12px 22px 12px 16px;border-radius:999px;border:1px solid rgba(224,138,85,.5);background:rgba(224,138,85,.14);color:var(--cream);font:600 22px/1 var(--body);cursor:pointer}
+.snd .ic{width:22px;height:22px;background:currentColor;-webkit-mask:var(--m) center/contain no-repeat;mask:var(--m) center/contain no-repeat;
+  --m:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M11 5 6 9H3v6h3l5 4z'/%3E%3Cpath d='M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13'/%3E%3C/svg%3E")}
+.snd[aria-pressed=false]{border-color:var(--line);background:rgba(14,20,44,.6);color:var(--mute)}
+.snd[aria-pressed=false] .ic{--m:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M11 5 6 9H3v6h3l5 4z'/%3E%3Cpath d='m22 9-6 6M16 9l6 6'/%3E%3C/svg%3E")}
+.try{font-size:22px;color:var(--mute);line-height:1.45;margin:0}
+.try b{color:var(--cream);font-weight:600}
+.laptop{position:absolute;left:200px;top:226px;width:1232px}
+.laptop .scr{position:relative;padding:16px;border-radius:30px;background:linear-gradient(180deg,#1A2038,#0B0F1E);border:1px solid rgba(157,180,224,.25);
+  box-shadow:0 60px 140px rgba(0,0,0,.6),0 0 120px rgba(224,138,85,.16)}
+.laptop video{display:block;width:100%;aspect-ratio:16/10;border-radius:16px;background:#F6ECE5;object-fit:cover}
+.laptop .base{height:24px;margin:0 -44px;border-radius:0 0 30px 30px;background:linear-gradient(180deg,#2A3150,#141a30);position:relative}
+.laptop .base::after{content:"";position:absolute;left:50%;top:0;width:180px;height:10px;margin-left:-90px;border-radius:0 0 12px 12px;background:#0b0f1e}
+.bar{position:absolute;left:16px;right:16px;bottom:16px;height:5px;border-radius:0 0 16px 16px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--copper),#FFD3AE)}
+
+/* 5 — data & tools */
+#s5 .top{width:1180px;display:flex;flex-direction:column;gap:22px}
+#s5 h2{font-size:66px}
+.cols{position:absolute;left:128px;right:128px;top:388px;display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:22px}
+.box{padding:28px 30px 26px;border-radius:26px;background:var(--panel);border:1px solid var(--line);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.box.nasa{border-color:rgba(224,138,85,.45);background:linear-gradient(180deg,rgba(60,32,22,.55),rgba(16,22,46,.62))}
+.box .k{font:600 19px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--peri);margin-bottom:18px}
+.box.nasa .k{color:var(--copper)}
+.it{padding:12px 0;border-top:1px solid var(--line)}
+.it:first-of-type{border-top:none;padding-top:0}
+.it h3{font-size:24px;font-weight:650;line-height:1.25;letter-spacing:-.005em}
+.it p{font-size:20px;line-height:1.35;color:var(--mute);margin-top:4px}
+.it p b{color:#F6C8A6;font-weight:500}
+
+/* 6 — fit */
+#s6 .top{width:1180px;display:flex;flex-direction:column;gap:22px}
+#s6 h2{font-size:66px}
+.fit{position:absolute;left:128px;right:128px;top:330px;display:grid;grid-template-columns:380px 1fr;gap:56px;align-items:start}
+.ring{position:relative;width:360px;height:360px}
+.ring svg{width:360px;height:360px;transform:rotate(-90deg)}
+.ring .num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+.ring .num b{font-size:118px;font-weight:800;letter-spacing:-.05em;line-height:.9;font-variant-numeric:tabular-nums}
+.ring .num b small{font-size:58px;color:var(--mute);font-weight:600}
+.ring .num .lbl{font:500 19px/1.3 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--peri);text-align:center}
+#arc{stroke-dasharray:0 1000;transition:stroke-dasharray 2s var(--out) .8s}
+.next{margin-top:28px;width:360px;font-size:21px;line-height:1.45;color:var(--mute)}
+.next b{display:block;font:600 18px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--warn);margin-bottom:10px}
+.asks{display:grid;grid-template-columns:1fr 1fr;gap:10px 22px}
+.ask{display:grid;grid-template-columns:34px 1fr;gap:14px;align-items:start;padding:14px 18px;border-radius:18px;background:rgba(14,20,44,.55);border:1px solid var(--line)}
+.ask .c{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:rgba(91,192,138,.16);color:var(--ok);font:700 19px/1 var(--display)}
+.ask.part .c{background:rgba(242,176,74,.16);color:var(--warn)}
+.ask h3{font-size:22px;font-weight:650;line-height:1.25}
+.ask p{font-size:18px;line-height:1.35;color:var(--mute);margin-top:3px}
+
+/* 7 — close */
+#s7 .mid{position:absolute;left:0;right:0;top:350px;display:flex;flex-direction:column;align-items:center;gap:26px;text-align:center}
+#s7 h2{font-size:120px;letter-spacing:-.05em}
+#s7 .names{font-size:32px;color:#D6DEEF;font-weight:500}
+#s7 .pill{display:flex;gap:18px;align-items:center;padding:16px 30px;border-radius:999px;border:1px solid var(--line);background:rgba(14,20,44,.6);font-size:26px}
+#s7 .pill .url{font-size:28px}
+#s7 .pill span{color:var(--mute)}
+
+/* HUD */
+#hud{position:absolute;right:128px;bottom:44px;display:flex;gap:10px;align-items:center;z-index:5}
+#dots{display:flex;gap:8px;margin-right:18px}
+#dots button{width:12px;height:12px;padding:0;border-radius:999px;border:none;background:rgba(169,182,211,.35);cursor:pointer;transition:width .5s var(--out),background .5s}
+#dots button.cur{width:40px;background:var(--copper)}
+.nb{width:56px;height:56px;border-radius:50%;border:1px solid var(--line);background:rgba(14,20,44,.7);color:var(--cream);font-size:26px;cursor:pointer;display:grid;place-items:center}
+.nb:hover{border-color:var(--copper)}
+button:focus-visible{outline:3px solid var(--copper);outline-offset:3px}
+#hint{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);font:500 12px/1 var(--mono);letter-spacing:.14em;color:rgba(169,182,211,.55);text-transform:uppercase;pointer-events:none;transition:opacity 1s}
+
+/* type system: Saira Expanded for headlines, Saira Condensed caps for labels, Hanken Grotesk for reading */
+h1,h2,h3,.team .v,.ring .num b,.hz .l,.steps li b{font-family:var(--display)}
+h2,#s1 h1,#s7 h2,.ring .num b{font-stretch:125%;letter-spacing:-.012em;font-weight:700}
+#s1 h1{font-weight:800;font-size:196px;letter-spacing:-.02em;line-height:.9}
+h2{line-height:1.04}
+#s2 h2{font-size:70px} #s3 h2,#s5 h2,#s6 h2{font-size:58px} #s4 h2{font-size:56px} #s7 h2{font-size:100px}
+.hz h3,.st h3,.it h3,.ask h3,.team .v{font-stretch:112%;letter-spacing:-.005em}
+.st h3{font-size:34px} .hz h3{font-size:26px}
+.eyebrow,.foot,.delay,.tag,.st .n,.box .k,.ring .num .lbl,.next b,.chal b,.team .k,#hint{font-family:var(--display);font-stretch:75%;font-weight:600;letter-spacing:.09em}
+.eyebrow{font-size:26px;letter-spacing:.08em}
+.delay b{font-family:var(--display);font-stretch:125%;font-size:40px;letter-spacing:-.01em}
+.url{font-family:var(--display);font-stretch:100%;font-weight:600;letter-spacing:.02em}
+.lead,.hz p,.st p,.it p,.ask p,.steps li,.try,.next,.chal,.team .m,#s7 .names,#s7 .pill{font-family:var(--body)}
+.lead{font-size:30px}
+@media (prefers-reduced-motion: reduce){
+  .actor,.slide .r,#s1 h1 span,#neb{transition-duration:.01s!important;transition-delay:0s!important}
+  .actor .fl,.dash,.pin::after,#a-comet .tail,.spin{animation:none!important}
+}
+</style>
+
+<div id="view">
+<div id="stage" aria-live="polite">
+  <div id="neb"></div>
+  <canvas id="stars" width="1920" height="1080" aria-hidden="true"></canvas>
+  <div id="veil"></div>
+
+  <!-- route Earth → Mars (slide 2) -->
+  <svg class="ov" id="ov-route" viewBox="0 0 1920 1080" aria-hidden="true">
+    <path id="route" d="M1765 180 C 1700 230, 1620 280, 1540 315" fill="none" stroke="#9DB4E0" stroke-width="3" class="dash" opacity=".75"/>
+    <circle r="7" fill="#FFD3AE"><animateMotion dur="2.6s" repeatCount="indefinite"><mpath href="#route"/></animateMotion></circle>
+  </svg>
+  <!-- orbit around the body (slide 3) -->
+  <svg class="ov" id="ov-orbit" viewBox="0 0 1920 1080" aria-hidden="true">
+    <ellipse cx="430" cy="600" rx="330" ry="120" fill="none" stroke="#E08A55" stroke-width="2.5" class="dash" opacity=".55" transform="rotate(-14 430 600)"/>
+  </svg>
+  <!-- grand arc (slide 7) -->
+  <svg class="ov" id="ov-arc" viewBox="0 0 1920 1080" aria-hidden="true">
+    <path id="garc" d="M120 1010 C 600 900, 1300 960, 1900 760" fill="none" stroke="#9DB4E0" stroke-width="2.5" class="dash" opacity=".55"/>
+    <circle r="6" fill="#FFD3AE"><animateMotion dur="5s" repeatCount="indefinite"><mpath href="#garc"/></animateMotion></circle>
+  </svg>
+
+  <!-- actors (base widths are their design widths; states scale them) -->
+  <div class="actor" id="a-jupiter" data-w="500"><div class="fl" style="--bd:13s"><img src="assets/jupiter.png" alt=""></div></div>
+  <div class="actor" id="a-mars" data-w="500"><div class="fl" style="--bd:11s"><img class="spin" src="assets/mars.png" alt=""></div></div>
+  <div class="actor" id="a-earth" data-w="500"><div class="fl" style="--bd:10s"><img src="assets/earth.png" alt=""></div></div>
+  <div class="actor" id="a-body" data-w="300"><div class="fl" style="--bd:7s"><img src="assets/glass.png" alt=""></div></div>
+  <div class="actor" id="a-comet" data-w="700"><div class="fl"><img class="tail" src="assets/trail.png" alt=""><img class="rock" src="assets/comet.png" alt=""></div></div>
+  <div class="actor" id="a-ship" data-w="360"><div class="fl"><img src="assets/ship.png" alt=""></div></div>
+  <div class="actor" id="a-patch" data-w="300"><div class="fl" style="--bd:8s"><img src="assets/patch.png" alt="Celeste mission patch"></div></div>
+
+  <!-- 1 · TITLE -->
+  <section class="slide" id="s1" aria-label="Celeste — title">
+    <div class="col">
+      <div class="eyebrow r" style="--i:0">NASA Space Apps Challenge <b>2026</b></div>
+      <h1 aria-label="Celeste"><span style="--k:0">C</span><span style="--k:1">e</span><span style="--k:2">l</span><span style="--k:3">e</span><span style="--k:4">s</span><span style="--k:5">t</span><span style="--k:6">e</span></h1>
+      <p class="lead r" style="--i:4">A health companion for astronauts on long missions. It helps the crew read their own body, act early, and know when to call the flight surgeon.</p>
+      <div class="chal r" style="--i:5"><b>CHALLENGE</b>Create Health Monitoring Software for Astronauts on Space Missions</div>
+      <div class="team r" style="--i:6">
+        <div><div class="k">Team</div><div class="v">Dushanbe Hub</div></div>
+        <div><div class="k">Crew</div><div class="m">Ashurov Bahrom · Kurbanov Muhammadali</div></div>
+      </div>
+      <div class="url r" style="--i:7">celestasoft.health</div>
+    </div>
+  </section>
+
+  <!-- 2 · PROBLEM -->
+  <section class="slide" id="s2" aria-label="The problem">
+    <div class="top">
+      <div class="eyebrow r" style="--i:0">The problem</div>
+      <h2 class="r" style="--i:1">On the way to Mars, the nearest doctor is up to <em>22&nbsp;minutes</em> away.</h2>
+      <p class="lead r" style="--i:2">A message to Earth takes 3 to 22 minutes one way, so the crew has to notice changes in their own body first. NASA’s Human Research Program groups the risks into five hazards.</p>
+    </div>
+    <div class="delay r" style="--i:3">Signal to Earth<b>3–22 min one way</b></div>
+    <div class="haz">
+      <div class="hz r" style="--i:4"><div class="l">R</div><h3>Space radiation</h3><p>DNA damage, cancer and nervous-system risk</p></div>
+      <div class="hz r" style="--i:5"><div class="l">I</div><h3>Isolation &amp; confinement</h3><p>Poorer sleep, low mood, crew tension</p></div>
+      <div class="hz r" style="--i:6"><div class="l">D</div><h3>Distance from Earth</h3><p>No quick evacuation, delayed medical advice</p></div>
+      <div class="hz r" style="--i:7"><div class="l">G</div><h3>Gravity fields</h3><p>Bone loss of 1–1.5% a month, muscle loss, vision changes</p></div>
+      <div class="hz r" style="--i:8"><div class="l">E</div><h3>Hostile closed environment</h3><p>CO₂ headaches, microbes, immune changes</p></div>
+    </div>
+    <div class="foot r" style="--i:9"><span>Dushanbe Hub · <i>Celeste</i></span><span></span></div>
+  </section>
+
+  <!-- 3 · SOLUTION -->
+  <section class="slide" id="s3" aria-label="Our solution">
+    <span class="pin" style="--c:var(--warn);left:432px;top:452px"></span>
+    <span class="tag" style="--c:var(--warn);left:176px;top:400px"><i></i>Heart · watch</span>
+    <span class="pin" style="--c:var(--ok);left:430px;top:292px"></span>
+    <span class="tag" style="--c:var(--ok);left:478px;top:262px"><i></i>Sleep &amp; mind · ok</span>
+    <span class="pin" style="--c:var(--ok);left:400px;top:760px"></span>
+    <span class="tag" style="--c:var(--ok);left:440px;top:790px"><i></i>Bone &amp; muscle · ok</span>
+    <div class="right">
+      <div class="eyebrow r" style="--i:0">Our solution</div>
+      <h2 class="r" style="--i:1">Celeste turns a 90&#8209;second daily check into <em>one clear next step</em>.</h2>
+      <div class="loop">
+        <div class="st r" style="--i:2"><div class="n">01</div><h3>Collect</h3><p>Wearable sync, typed readings and the camera: blood pressure, heart rate, glucose, temperature, sleep, mood, SpO₂, dose.</p></div>
+        <div class="st r" style="--i:3"><div class="n">02</div><h3>Compare</h3><p>Each value is checked against the astronaut’s own pre-flight baseline and coloured green, amber or red.</p></div>
+        <div class="st r" style="--i:4"><div class="n">03</div><h3>Act</h3><p>One attention card says what to do next and why: re-measure, train, rest, or shelter from radiation.</p></div>
+        <div class="st r" style="--i:5"><div class="n">04</div><h3>Escalate</h3><p>Chest pain or a vision change goes straight into a report for the flight surgeon, sent in the next comms window.</p></div>
+      </div>
+    </div>
+    <div class="foot r" style="--i:6"><span>Dushanbe Hub · <i>Celeste</i></span><span></span></div>
+  </section>
+
+  <!-- 4 · HOW TO USE -->
+  <section class="slide" id="s4" aria-label="How to use Celeste">
+    <div class="tophead">
+      <div>
+        <div class="eyebrow r" style="--i:0">How to use it</div>
+        <h2 class="r" style="--i:1">Celeste in <em>60&nbsp;seconds</em></h2>
+      </div>
+      <div class="tools r" style="--i:2">
+        <button class="snd" id="snd" aria-pressed="true"><span class="ic" aria-hidden="true"></span><span id="sndt">Sound on</span></button>
+        <p class="try">Try it: <b>celestasoft.health</b> → Log in → <b>Demo astronaut</b></p>
+      </div>
+    </div>
+    <div class="laptop r" style="--i:2">
+      <div class="scr">
+        <video id="tour" src="assets/tour-60.mp4" poster="assets/tour-poster.jpg" playsinline preload="auto"></video>
+        <div class="bar"><i id="tbar"></i></div>
+      </div>
+      <div class="base"></div>
+    </div>
+  </section>
+
+  <!-- 5 · DATA & TOOLS -->
+  <section class="slide" id="s5" aria-label="NASA data and how we built it">
+    <div class="top">
+      <div class="eyebrow r" style="--i:0">NASA data &amp; how we built it</div>
+      <h2 class="r" style="--i:1">Built on <em>NASA science</em>, open data and modern tools.</h2>
+    </div>
+    <div class="cols">
+      <div class="box nasa r" style="--i:2">
+        <div class="k">NASA data</div>
+        <div class="it"><h3>Five Hazards of Human Spaceflight · HRP</h3><p><b>→</b> the hazard map every reading feeds</p></div>
+        <div class="it"><h3>Human System Risks · HRP</h3><p><b>→</b> which indicators matter and when to escalate</p></div>
+        <div class="it"><h3>DONKI space-weather API</h3><p><b>→</b> live solar flares, CMEs and particle events on the Radiation page</p></div>
+        <div class="it"><h3>ISS exercise countermeasures: CEVIS, ARED, T2</h3><p><b>→</b> the training plan, with NASA public-domain photos</p></div>
+        <div class="it"><h3>OSDR · Inspiration4 blood counts</h3><p><b>→</b> research context in Body, being added</p></div>
+      </div>
+      <div class="box r" style="--i:3">
+        <div class="k">Space agencies &amp; other</div>
+        <div class="it"><h3>CSA · Monitoring radiation for astronaut health</h3><p>Personal dose first, space weather as context</p></div>
+        <div class="it"><h3>CSA · Why we do science in space</h3><p>How bodies change in orbit and why exams matter</p></div>
+        <div class="it"><h3>WHOOP Developer API v2</h3><p>Recovery, sleep, HRV and heart rate sync automatically</p></div>
+      </div>
+      <div class="box r" style="--i:4">
+        <div class="k">How we built it</div>
+        <div class="it"><h3>Expo · React Native</h3><p>One codebase for iPhone and the web</p></div>
+        <div class="it"><h3>Node.js · SQLite</h3><p>Accounts, health engine, store-and-forward queue</p></div>
+        <div class="it"><h3>Claude</h3><p>Coding partner for the app and this deck</p></div>
+        <div class="it"><h3>ChatGPT · Higgsfield</h3><p>Space artwork and the glass body model</p></div>
+      </div>
+    </div>
+    <div class="foot r" style="--i:5"><span>Dushanbe Hub · <i>Celeste</i></span><span></span></div>
+  </section>
+
+  <!-- 6 · CHALLENGE FIT -->
+  <section class="slide" id="s6" aria-label="How Celeste answers the challenge">
+    <div class="top">
+      <div class="eyebrow r" style="--i:0">Challenge fit</div>
+      <h2 class="r" style="--i:1">We checked Celeste against <em>every ask</em> in the challenge.</h2>
+    </div>
+    <div class="fit">
+      <div class="r" style="--i:2">
+        <div class="ring">
+          <svg viewBox="0 0 360 360" aria-hidden="true">
+            <circle cx="180" cy="180" r="158" fill="none" stroke="rgba(157,180,224,.16)" stroke-width="22"/>
+            <circle id="arc" cx="180" cy="180" r="158" fill="none" stroke="url(#gr)" stroke-width="22" stroke-linecap="round"/>
+            <defs><linearGradient id="gr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFD3AE"/><stop offset="1" stop-color="#C9632F"/></linearGradient></defs>
+          </svg>
+          <div class="num"><b><span id="cnt">0</span><small>/12</small></b><span class="lbl">asks fully<br>covered</span></div>
+        </div>
+        <p class="next"><b>Next</b>Streaks and mission patches for daily checks, and NASA OSDR Inspiration4 values in Body.</p>
+      </div>
+      <div class="asks">
+        <div class="ask r" style="--i:3"><span class="c">✓</span><div><h3>Gather health indicators</h3><p>BP, heart rate, glucose, temperature, sleep, mood, SpO₂, dose</p></div></div>
+        <div class="ask r" style="--i:3"><span class="c">✓</span><div><h3>Guide treatment &amp; improvement</h3><p>Attention card with the next step and a “Why?”</p></div></div>
+        <div class="ask r" style="--i:4"><span class="c">✓</span><div><h3>Any kind of input</h3><p>Typing, taps, camera rep counter and face scan</p></div></div>
+        <div class="ask r" style="--i:4"><span class="c">✓</span><div><h3>Clickable human figure</h3><p>Body explorer with six body systems</p></div></div>
+        <div class="ask r" style="--i:5"><span class="c">✓</span><div><h3>Link hazards to indicators</h3><p>Every signal feeds one of the five RIDGE hazards</p></div></div>
+        <div class="ask r" style="--i:5"><span class="c">✓</span><div><h3>When to call the flight surgeon</h3><p>Red symptoms always escalate; reports queue offline</p></div></div>
+        <div class="ask r" style="--i:6"><span class="c">✓</span><div><h3>Different environments</h3><p>Station, Moon, Mars, Jupiter: comms delay adapts</p></div></div>
+        <div class="ask r" style="--i:6"><span class="c">✓</span><div><h3>Routine prompts</h3><p>Daily check, today’s training session, next EVA</p></div></div>
+        <div class="ask r" style="--i:7"><span class="c">✓</span><div><h3>Charts over time</h3><p>7-day sparklines, 4-week activity, risk timeline</p></div></div>
+        <div class="ask r" style="--i:7"><span class="c">✓</span><div><h3>Colour coding at a glance</h3><p>Green, amber, red against your own baseline</p></div></div>
+        <div class="ask r" style="--i:8"><span class="c">✓</span><div><h3>Simple explanations</h3><p>Each metric: what it is, why it matters in space, how to measure</p></div></div>
+        <div class="ask part r" style="--i:8"><span class="c">◐</span><div><h3>Gamification</h3><p>Weekly training ring today; streaks come next</p></div></div>
+      </div>
+    </div>
+    <div class="foot r" style="--i:9"><span>Dushanbe Hub · <i>Celeste</i></span><span></span></div>
+  </section>
+
+  <!-- 7 · CLOSE -->
+  <section class="slide" id="s7" aria-label="Closing">
+    <div class="mid">
+      <div class="eyebrow r" style="--i:0">Celeste · by <b>Dushanbe Hub</b></div>
+      <h2 class="r" style="--i:1">Your health, <em>beyond Earth.</em></h2>
+      <p class="names r" style="--i:2">Ashurov Bahrom · Kurbanov Muhammadali</p>
+      <div class="pill r" style="--i:3"><span class="url">celestasoft.health</span><span>Log in → Demo astronaut</span></div>
+    </div>
+  </section>
+
+  <div id="hud">
+    <div id="dots" role="tablist" aria-label="Slides"></div>
+    <button class="nb" id="prev" aria-label="Previous slide">‹</button>
+    <button class="nb" id="next" aria-label="Next slide">›</button>
+  </div>
+</div>
+</div>
+<div id="hint">← → or click · F for full screen</div>
+
+<script>
+(() => {
+  const N = 7, stage = document.getElementById('stage');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- fit the 1920×1080 stage to the window ---------- */
+  function fit() {
+    const pad = innerWidth < 700 ? 16 : 0;
+    const k = Math.min((innerWidth - pad * 2) / 1920, innerHeight / 1080);
+    stage.style.transform = `translate(${-960 * k}px, ${-540 * k}px) scale(${k})`;
+  }
+  addEventListener('resize', fit); fit();
+
+  /* ---------- actor states per slide: [x, y, width, rotate, opacity, blur] ---------- */
+  const S = [
+    { // 1 title
+      earth:[1560,930,820,0,1,1.5], mars:[1720,190,150,0,1,0], jupiter:[2150,-120,300,0,0,0],
+      ship:[1480,330,280,-12,1,0], patch:[203,195,150,0,1,0], comet:[1180,110,420,-8,1,0], body:[2200,600,240,0,0,0], neb:[0,0]
+    },
+    { // 2 problem — Earth far, Mars near, signal route
+      earth:[1790,135,110,0,1,0], mars:[1560,500,390,0,1,0], jupiter:[2150,-140,300,0,0,0],
+      ship:[1655,250,120,-38,1,0], patch:[1200,1300,120,0,0,0], comet:[-400,-200,500,0,0,0], body:[2200,600,240,0,0,0], neb:[-260,-40]
+    },
+    { // 3 solution — the body takes the stage, planets retreat
+      earth:[120,140,130,0,.9,0], mars:[1830,980,190,0,.9,0], jupiter:[2150,1200,300,0,0,0],
+      ship:[740,170,120,24,1,0], patch:[1200,1300,120,0,0,0], comet:[250,880,260,-12,1,0], body:[430,600,270,0,1,0], neb:[-520,-120]
+    },
+    { // 4 tour — ship docks by the screen
+      earth:[-160,1000,220,0,0,0], mars:[1730,330,240,0,1,0], jupiter:[2150,1200,300,0,0,0],
+      ship:[1690,700,170,-28,1,0], patch:[1200,1300,120,0,0,0], comet:[-400,600,400,0,0,0], body:[-300,600,240,0,0,0], neb:[-760,-60]
+    },
+    { // 5 data — Jupiter rises behind the heading
+      earth:[-200,980,180,0,0,0], mars:[-220,120,120,0,0,0], jupiter:[1660,180,460,0,1,0],
+      ship:[1330,250,140,-60,1,0], patch:[1200,1300,120,0,0,0], comet:[2200,900,400,0,0,0], body:[-300,600,240,0,0,0], neb:[-980,-160]
+    },
+    { // 6 fit — comet streaks across the top
+      earth:[1860,980,150,0,.8,0], mars:[1700,150,170,0,.95,0], jupiter:[2300,180,460,0,0,0],
+      ship:[1450,190,120,-25,1,0], patch:[1200,1300,120,0,0,0], comet:[1260,90,380,-6,1,0], body:[-300,600,240,0,0,0], neb:[-760,-200]
+    },
+    { // 7 close — planets line up on one arc, patch at the centre
+      earth:[250,890,290,0,1,0], mars:[1000,950,160,0,1,0], jupiter:[1700,830,330,0,1,0],
+      ship:[640,925,120,-12,1,0], patch:[960,200,210,0,1,0], comet:[1760,90,420,-8,1,0], body:[-300,600,240,0,0,0], neb:[-380,-60]
+    }
+  ];
+  const actors = {};
+  for (const el of document.querySelectorAll('.actor')) actors[el.id.slice(2)] = { el, w: +el.dataset.w };
+  // natural heights so the centre point is right
+  for (const a of Object.values(actors)) { const img = a.el.querySelector('img'); a.h = a.w; const set = () => { if (img.naturalWidth) a.h = a.w * img.naturalHeight / img.naturalWidth; }; img.complete ? set() : img.addEventListener('load', () => { set(); place(cur); }); }
+  actors.comet.h = 309;
+  const neb = document.getElementById('neb');
+  function place(i) {
+    const st = S[i];
+    for (const [k, a] of Object.entries(actors)) {
+      const [x, y, w, r, o, b] = st[k] || [0, 0, a.w, 0, 0, 0];
+      const s = Math.max(w, 1) / a.w;
+      a.el.style.width = a.w + 'px';
+      a.el.style.transform = `translate(${x - a.w / 2}px, ${y - a.h / 2}px) scale(${s}) rotate(${r}deg)`;
+      a.el.style.opacity = w ? o : 0;
+      a.el.style.filter = b ? `blur(${b}px)` : 'none';
+    }
+    neb.style.transform = `translate(${st.neb[0]}px, ${st.neb[1]}px)`;
+  }
+
+  /* ---------- starfield with warp ---------- */
+  const cv = document.getElementById('stars'), cx = cv.getContext('2d');
+  const stars = Array.from({ length: 900 }, () => ({ x: (Math.random() * 2 - 1) * 1.4, y: (Math.random() * 2 - 1) * 1.4, z: Math.random() + .02, t: Math.random() * 6.28 }));
+  let speed = .0009, target = .0009, vx = 960, vy = 540, tvx = 960, tvy = 540;
+  function frame() {
+    speed += (target - speed) * .06; target += (.0009 - target) * .035;
+    vx += (tvx - vx) * .04; vy += (tvy - vy) * .04;
+    cx.clearRect(0, 0, 1920, 1080);
+    const warp = speed > .006;
+    for (const s of stars) {
+      const px = vx + s.x / s.z * 960, py = vy + s.y / s.z * 760;
+      s.z -= speed; s.t += .03;
+      if (s.z <= .02) { s.z = 1; s.x = (Math.random() * 2 - 1) * 1.4; s.y = (Math.random() * 2 - 1) * 1.4; continue; }
+      const nx = vx + s.x / s.z * 960, ny = vy + s.y / s.z * 760;
+      if (nx < -50 || nx > 1970 || ny < -50 || ny > 1130) { s.z = 1; continue; }
+      const a = Math.min(1, (1 - s.z) * 1.4) * (.65 + .35 * Math.sin(s.t));
+      if (warp) {
+        cx.strokeStyle = `rgba(214,226,255,${a * .9})`; cx.lineWidth = (1 - s.z) * 2.6 + .3;
+        cx.beginPath(); cx.moveTo(px, py); cx.lineTo(nx, ny); cx.stroke();
+      } else {
+        const r = (1 - s.z) * 1.9 + .25;
+        cx.fillStyle = `rgba(230,236,255,${a})`; cx.beginPath(); cx.arc(nx, ny, r, 0, 6.283); cx.fill();
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+  if (!reduce) requestAnimationFrame(frame); else { cx.fillStyle = '#dfe6ff'; for (const s of stars) { cx.globalAlpha = Math.random(); cx.fillRect(960 + s.x / s.z * 400, 540 + s.y / s.z * 300, 1.5, 1.5); } }
+
+  /* ---------- slide engine ---------- */
+  const slides = [...document.querySelectorAll('.slide')];
+  const dots = document.getElementById('dots');
+  slides.forEach((s, i) => {
+    const f = s.querySelector('.foot span:last-child'); if (f) f.textContent = String(i + 1).padStart(2, '0') + ' / 07';
+    const b = document.createElement('button'); b.setAttribute('aria-label', 'Slide ' + (i + 1)); b.onclick = e => { e.stopPropagation(); go(i); }; dots.appendChild(b);
+  });
+  const ovs = { 1: 'ov-route', 2: 'ov-orbit', 6: 'ov-arc' };
+  let cur = -1, lock = 0;
+  function go(i) {
+    i = Math.max(0, Math.min(N - 1, i));
+    if (i === cur || Date.now() < lock) return;
+    lock = Date.now() + 650;
+    const prev = slides[cur];
+    if (prev) { prev.classList.remove('on'); prev.classList.add('out'); setTimeout(() => prev.classList.remove('out'), 700); }
+    const dir = cur < 0 ? 1 : Math.sign(i - cur);
+    cur = i;
+    if (!reduce && prev) { target = .034; tvx = 960 + dir * 260; tvy = 540; setTimeout(() => { tvx = 960; }, 900); }
+    place(i);
+    for (const [k, id] of Object.entries(ovs)) document.getElementById(id).classList.toggle('on', +k === i);
+    setTimeout(() => slides[i].classList.add('on'), prev ? 380 : 60);
+    [...dots.children].forEach((d, j) => { d.classList.toggle('cur', j === i); d.setAttribute('aria-current', j === i ? 'true' : 'false'); });
+    try { history.replaceState(null, '', '#s' + (i + 1)); } catch (e) {}
+    onEnter(i);
+  }
+
+  /* slide 4: narrated tour with sound toggle */
+  const vid = document.getElementById('tour'), tbar = document.getElementById('tbar'), snd = document.getElementById('snd'), sndt = document.getElementById('sndt');
+  let vtimer = null, wantSound = true;
+  try { wantSound = localStorage.getItem('celeste-sound') !== 'off'; } catch (e) {}
+  function showSound() { snd.setAttribute('aria-pressed', String(!vid.muted)); sndt.textContent = vid.muted ? 'Sound off' : 'Sound on'; }
+  function progress() { if (vid.duration) tbar.style.width = (vid.currentTime / vid.duration * 100) + '%'; if (cur === 3) requestAnimationFrame(progress); }
+  function playTour() {
+    vid.currentTime = 0; vid.muted = !wantSound; showSound();
+    vid.play().catch(() => { vid.muted = true; showSound(); vid.play().catch(() => {}); });
+    requestAnimationFrame(progress);
+  }
+  snd.addEventListener('click', e => { e.stopPropagation(); vid.muted = !vid.muted; wantSound = !vid.muted; try { localStorage.setItem('celeste-sound', wantSound ? 'on' : 'off'); } catch (err) {} showSound(); if (vid.paused && cur === 3) vid.play().catch(() => {}); });
+  vid.addEventListener('ended', () => { tbar.style.width = '100%'; });
+  vid.addEventListener('click', e => { e.stopPropagation(); vid.paused ? vid.play().catch(() => {}) : vid.pause(); });
+
+  /* slide 6: ring + count */
+  const arc = document.getElementById('arc'), cnt = document.getElementById('cnt'), C = 2 * Math.PI * 158;
+  function onEnter(i) {
+    clearTimeout(vtimer);
+    if (i === 3) { vtimer = setTimeout(playTour, 1000); }
+    else vid.pause();
+    if (i === 5) {
+      arc.style.strokeDasharray = `0 ${C}`; cnt.textContent = '0';
+      requestAnimationFrame(() => requestAnimationFrame(() => { arc.style.strokeDasharray = `${C * 11 / 12} ${C}`; }));
+      const t0 = performance.now() + 800;
+      const tick = now => { const p = Math.min(1, Math.max(0, (now - t0) / 1600)); cnt.textContent = Math.round(11 * (1 - Math.pow(1 - p, 3))); if (p < 1 && cur === 5) requestAnimationFrame(tick); };
+      requestAnimationFrame(tick);
+    }
+  }
+
+  /* input */
+  document.getElementById('next').onclick = e => { e.stopPropagation(); go(cur + 1); };
+  document.getElementById('prev').onclick = e => { e.stopPropagation(); go(cur - 1); };
+  addEventListener('keydown', e => {
+    if (['ArrowRight', 'PageDown', ' ', 'Enter'].includes(e.key)) { e.preventDefault(); go(cur + 1); }
+    else if (['ArrowLeft', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); go(cur - 1); }
+    else if (e.key === 'Home') go(0); else if (e.key === 'End') go(N - 1);
+    else if (e.key === 'f' || e.key === 'F') { const d = document.documentElement; (document.fullscreenElement ? document.exitFullscreen() : d.requestFullscreen?.())?.catch?.(() => {}); }
+  });
+  document.getElementById('view').addEventListener('click', e => {
+    if (e.target.closest('video,button,a')) return;
+    go(e.clientX < innerWidth * .25 ? cur - 1 : cur + 1);
+  });
+  let sx = null;
+  addEventListener('touchstart', e => { sx = e.touches[0].clientX; }, { passive: true });
+  addEventListener('touchend', e => { if (sx === null) return; const dx = e.changedTouches[0].clientX - sx; if (Math.abs(dx) > 40) go(cur + (dx < 0 ? 1 : -1)); sx = null; });
+  setTimeout(() => { const h = document.getElementById('hint'); h.style.opacity = 0; }, 6000);
+
+  const m = /^#s([1-7])$/.exec(location.hash);
+  go(m ? +m[1] - 1 : 0);
+  addEventListener('hashchange', () => { const m = /^#s([1-7])$/.exec(location.hash); if (m && +m[1] - 1 !== cur) go(+m[1] - 1); });
+})();
+</script>
