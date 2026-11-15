@@ -209,10 +209,12 @@ h2{line-height:1.04}
   .actor,.slide .r,#s1 h1 span,#neb{transition-duration:.01s!important;transition-delay:0s!important}
   .actor .fl,.dash,.pin::after,#a-comet .tail,.spin{animation:none!important}
 }
+#aiwm{position:absolute;right:28px;top:24px;z-index:9999;pointer-events:none;font:700 20px/1 var(--body);letter-spacing:.04em;color:rgba(255,255,255,.85);background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.25);padding:8px 14px;border-radius:999px}
 </style>
 
 <div id="view">
 <div id="stage" aria-live="polite">
+  <div id="aiwm" aria-hidden="true">SI</div>
   <div id="neb"></div>
   <canvas id="stars" width="1920" height="1080" aria-hidden="true"></canvas>
   <div id="veil"></div>
