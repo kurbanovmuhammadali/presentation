@@ -122,25 +122,22 @@ h2 em{font-style:normal;color:var(--copper)}
 #s3.on .tag{opacity:1}
 .tag i{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--c);margin-right:10px;vertical-align:1px}
 
-/* 4 — tour */
-#s4 .tophead{position:absolute;left:200px;right:200px;top:62px;display:flex;justify-content:space-between;align-items:flex-end;gap:40px}
-#s4 .tophead .eyebrow{margin-bottom:10px}
-#s4 .tools{display:flex;flex-direction:column;align-items:flex-end;gap:12px}
-.snd{display:inline-flex;align-items:center;gap:12px;padding:12px 22px 12px 16px;border-radius:999px;border:1px solid rgba(224,138,85,.5);background:rgba(224,138,85,.14);color:var(--cream);font:600 22px/1 var(--body);cursor:pointer}
-.snd .ic{width:22px;height:22px;background:currentColor;-webkit-mask:var(--m) center/contain no-repeat;mask:var(--m) center/contain no-repeat;
-  --m:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M11 5 6 9H3v6h3l5 4z'/%3E%3Cpath d='M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13'/%3E%3C/svg%3E")}
-.snd[aria-pressed=false]{border-color:var(--line);background:rgba(14,20,44,.6);color:var(--mute)}
-.snd[aria-pressed=false] .ic{--m:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M11 5 6 9H3v6h3l5 4z'/%3E%3Cpath d='m22 9-6 6M16 9l6 6'/%3E%3C/svg%3E")}
-.try{font-size:22px;color:var(--mute);line-height:1.45;margin:0}
-.try b{color:var(--cream);font-weight:600}
-.laptop{position:absolute;left:200px;top:226px;width:1232px}
-.laptop .scr{position:relative;padding:16px;border-radius:30px;background:linear-gradient(180deg,#1A2038,#0B0F1E);border:1px solid rgba(157,180,224,.25);
-  box-shadow:0 60px 140px rgba(0,0,0,.6),0 0 120px rgba(224,138,85,.16)}
-.laptop video{display:block;width:100%;aspect-ratio:16/10;border-radius:16px;background:#F6ECE5;object-fit:cover}
-.laptop .base{height:24px;margin:0 -44px;border-radius:0 0 30px 30px;background:linear-gradient(180deg,#2A3150,#141a30);position:relative}
-.laptop .base::after{content:"";position:absolute;left:50%;top:0;width:180px;height:10px;margin-left:-90px;border-radius:0 0 12px 12px;background:#0b0f1e}
-.bar{position:absolute;left:16px;right:16px;bottom:16px;height:5px;border-radius:0 0 16px 16px;overflow:hidden}
-.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--copper),#FFD3AE)}
+/* 4 — how to use (screens) */
+#s4 .top4{position:absolute;left:128px;top:112px;width:1060px;display:flex;flex-direction:column;gap:18px}
+#s4 h2{font-size:56px}
+#s4 .try{position:absolute;left:1210px;top:206px;width:582px;font-size:21px;color:var(--mute);margin:0;line-height:1.4}
+#s4 .try b{color:var(--cream);font-weight:600}
+.laptop{position:absolute;left:128px;top:300px;width:1032px}
+.laptop .scr{position:relative;padding:16px;border-radius:26px;background:linear-gradient(180deg,#1A2038,#0B0F1E);border:1px solid rgba(157,180,224,.25);box-shadow:0 60px 140px rgba(0,0,0,.6),0 0 120px rgba(224,138,85,.16)}
+.laptop .scr img{display:block;width:1000px;height:625px;border-radius:12px;object-fit:cover}
+.laptop .base{height:22px;margin:0 -36px;border-radius:0 0 26px 26px;background:linear-gradient(180deg,#2A3150,#141a30)}
+.tag4{position:absolute;left:38px;top:36px;padding:10px 18px;border-radius:999px;background:rgba(28,20,16,.85);color:var(--cream);font:600 19px/1 var(--display);font-stretch:75%;letter-spacing:.08em;text-transform:uppercase}
+.steps4{position:absolute;left:1210px;top:296px;width:582px;list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
+.steps4 li{display:flex;gap:16px;align-items:flex-start}
+.steps4 li>b{flex:none;display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#F09A63,#B4552C);color:#fff;font:700 20px/1 var(--display)}
+.steps4 img{flex:none;width:160px;height:100px;border-radius:10px;object-fit:cover;border:1px solid rgba(157,180,224,.3)}
+.steps4 h3{font-family:var(--display);font-stretch:112%;font-size:22px;font-weight:700;margin:2px 0 6px}
+.steps4 p{font-family:var(--body);font-size:18px;line-height:1.3;color:var(--mute);margin:0}
 
 /* 5 — data & tools */
 #s5 .top{width:1180px;display:flex;flex-direction:column;gap:22px}
@@ -300,23 +297,23 @@ h2{line-height:1.04}
 
   <!-- 4 · HOW TO USE -->
   <section class="slide" id="s4" aria-label="How to use Celeste">
-    <div class="tophead">
-      <div>
-        <div class="eyebrow r" style="--i:0">How to use it</div>
-        <h2 class="r" style="--i:1">Celeste in <em>60&nbsp;seconds</em></h2>
-      </div>
-      <div class="tools r" style="--i:2">
-        <button class="snd" id="snd" aria-pressed="true"><span class="ic" aria-hidden="true"></span><span id="sndt">Sound on</span></button>
-        <p class="try">Try it: <b>celestasoft.health</b> → Log in → <b>Demo astronaut</b></p>
-      </div>
+    <div class="top4">
+      <div class="eyebrow r" style="--i:0">How to use it</div>
+      <h2 class="r" style="--i:1">Five steps, <em>every mission day</em></h2>
     </div>
+    <p class="try r" style="--i:2">Try it live: <b>celestasoft.health</b> → Log in → <b>Demo astronaut</b></p>
     <div class="laptop r" style="--i:2">
-      <div class="scr">
-        <video id="tour" src="assets/tour-60.mp4" poster="assets/tour-poster.jpg" playsinline preload="auto"></video>
-        <div class="bar"><i id="tbar"></i></div>
-      </div>
+      <div class="scr"><img src="assets/step-home.jpg" alt="Celeste Home: five NASA hazards, attention card and health statistics"><span class="tag4">1 · Home screen</span></div>
       <div class="base"></div>
     </div>
+    <ol class="steps4">
+      <li class="r" style="--i:3"><b>1</b><div><h3>Check the hazards</h3><p>Home shows the five NASA hazards and the one thing that needs attention today.</p></div></li>
+      <li class="r" style="--i:4"><b>2</b><img src="assets/step-check.jpg" alt="Blood pressure log"><div><h3>Do the daily check</h3><p>The wearable fills in sleep and heart rate; you add blood pressure. About 90 seconds.</p></div></li>
+      <li class="r" style="--i:5"><b>3</b><img src="assets/step-train.jpg" alt="Camera rep counter"><div><h3>Train</h3><p>The camera counts squats and checks your form, right on the device.</p></div></li>
+      <li class="r" style="--i:6"><b>4</b><img src="assets/step-crew.jpg" alt="Anonymous crew pulse"><div><h3>Stay a crew</h3><p>Anonymous crew pulse, concerns and calls to crewmates.</p></div></li>
+      <li class="r" style="--i:7"><b>5</b><img src="assets/step-surgeon.jpg" alt="Flight surgeon report"><div><h3>Escalate</h3><p>One tap queues a report for the flight surgeon’s next comms window.</p></div></li>
+    </ol>
+    <div class="foot r" style="--i:8"><span>Dushanbe Hub · <i>Celeste</i></span><span></span></div>
   </section>
 
   <!-- 5 · DATA & TOOLS -->
@@ -434,8 +431,8 @@ h2{line-height:1.04}
       ship:[740,170,120,24,1,0], patch:[1200,1300,120,0,0,0], comet:[250,880,260,-12,1,0], body:[430,600,270,0,1,0], neb:[-520,-120]
     },
     { // 4 tour — ship docks by the screen
-      earth:[-160,1000,220,0,0,0], mars:[1730,330,240,0,1,0], jupiter:[2150,1200,300,0,0,0],
-      ship:[1690,700,170,-28,1,0], patch:[1200,1300,120,0,0,0], comet:[-400,600,400,0,0,0], body:[-300,600,240,0,0,0], neb:[-760,-60]
+      earth:[-160,1000,220,0,0,0], mars:[1846,104,130,0,1,0], jupiter:[2150,1200,300,0,0,0],
+      ship:[1188,1010,96,-25,1,0], patch:[1200,1300,120,0,0,0], comet:[-400,600,400,0,0,0], body:[-300,600,240,0,0,0], neb:[-760,-60]
     },
     { // 5 data — Jupiter rises behind the heading
       earth:[-200,980,180,0,0,0], mars:[-220,120,120,0,0,0], jupiter:[1660,180,460,0,1,0],
@@ -523,27 +520,9 @@ h2{line-height:1.04}
     onEnter(i);
   }
 
-  /* slide 4: narrated tour with sound toggle */
-  const vid = document.getElementById('tour'), tbar = document.getElementById('tbar'), snd = document.getElementById('snd'), sndt = document.getElementById('sndt');
-  let vtimer = null, wantSound = true;
-  try { wantSound = localStorage.getItem('celeste-sound') !== 'off'; } catch (e) {}
-  function showSound() { snd.setAttribute('aria-pressed', String(!vid.muted)); sndt.textContent = vid.muted ? 'Sound off' : 'Sound on'; }
-  function progress() { if (vid.duration) tbar.style.width = (vid.currentTime / vid.duration * 100) + '%'; if (cur === 3) requestAnimationFrame(progress); }
-  function playTour() {
-    vid.currentTime = 0; vid.muted = !wantSound; showSound();
-    vid.play().catch(() => { vid.muted = true; showSound(); vid.play().catch(() => {}); });
-    requestAnimationFrame(progress);
-  }
-  snd.addEventListener('click', e => { e.stopPropagation(); vid.muted = !vid.muted; wantSound = !vid.muted; try { localStorage.setItem('celeste-sound', wantSound ? 'on' : 'off'); } catch (err) {} showSound(); if (vid.paused && cur === 3) vid.play().catch(() => {}); });
-  vid.addEventListener('ended', () => { tbar.style.width = '100%'; });
-  vid.addEventListener('click', e => { e.stopPropagation(); vid.paused ? vid.play().catch(() => {}) : vid.pause(); });
-
   /* slide 6: ring + count */
   const arc = document.getElementById('arc'), cnt = document.getElementById('cnt'), C = 2 * Math.PI * 158;
   function onEnter(i) {
-    clearTimeout(vtimer);
-    if (i === 3) { vtimer = setTimeout(playTour, 1000); }
-    else vid.pause();
     if (i === 5) {
       arc.style.strokeDasharray = `0 ${C}`; cnt.textContent = '0';
       requestAnimationFrame(() => requestAnimationFrame(() => { arc.style.strokeDasharray = `${C * 11 / 12} ${C}`; }));
